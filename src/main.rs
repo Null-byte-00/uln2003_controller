@@ -4,6 +4,10 @@
 use arduino_hal::{hal::port::PB1, port::{mode::{self, Output}, Pin}, Pins};
 use panic_halt as _;
 
+enum Direction {
+    Clockwise,
+    CounterClockwise
+}
 
 pub struct Motor {
     last_index: i32,
@@ -22,7 +26,7 @@ impl Motor {
             steper2: pins.d10.into_output().downgrade(),
             steper3: pins.d11.into_output().downgrade(),
             steper4: pins.d12.into_output().downgrade(),
-            last_index: 0
+            last_index: 0,
         };
     }
 
@@ -50,6 +54,33 @@ impl Motor {
             self.last_index = 0;
         } else {
             self.last_index += 1;
+        }
+    }
+
+    fn move_counterclockwise(&mut self) {
+        match self.last_index {
+            3=>{
+                self.steper1.set_low();
+                self.steper4.set_high()
+            },
+            2=>{
+                self.steper4.set_low();
+                self.steper3.set_high();
+            },
+            1=>{
+                self.steper3.set_low();
+                self.steper2.set_high();
+            },
+            0=>{
+                self.steper2.set_low();
+                self.steper1.set_high();
+            },
+            _=>{}
+        }
+        if self.last_index <= 0 {
+            self.last_index = 3;
+        } else {
+            self.last_index -= 1;
         }
     }
 }
@@ -84,6 +115,6 @@ fn main() -> ! {
 
     loop {
         motor.move_clockwise();
-        arduino_hal::delay_ms(10);
+        arduino_hal::delay_ms(2);
     }
 }
